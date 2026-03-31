@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -244,4 +245,252 @@
     randomArray();
   </script>
 </body>
+=======
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>氣泡排序( Bubble Sort ) 視覺化教學</title>
+  <style>
+    body { font-family: "微軟正黑體", sans-serif; padding: 20px; background: #f7f9fc; }
+    h1,h2 { color: #2c3e50; }
+    #arrayContainer { display: flex; align-items: flex-end; height: 270px; margin: 20px 0; gap: 6px; }
+    .bar { width: 28px; background: #3498db; border-radius: 4px; text-align: center; color: white; font-size: 12px; position: relative; }
+    .bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; font-weight: 700; }
+    .bar.compare { background: #f1c40f; }
+    .bar.swap { background: #e74c3c; }
+    .bar.sorted { background: #2ecc71; }
+    #controls { margin-bottom: 16px; }
+    button, input { border: 1px solid #ccc; border-radius: 5px; padding: 8px 12px; margin-right: 8px; font-size: 14px; }
+    #log, #info { background: #ffffff; border: 1px solid #dce2e8; border-radius: 8px; padding: 12px; max-height: 240px; overflow: auto; margin-top: 12px; }
+    #complexity { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <h1>氣泡排序 (Bubble Sort) 互動教學</h1>
+  <p>說明：每回合從左到右兩兩比較，若左大於右則交換，最右逐步形成已排序最大值。</p>
+
+    <!-- 快捷切換區塊 -->
+    <div id="shortcut-switch" style="margin-bottom: 18px;">
+      <strong>切換：</strong>
+      <a href="selection_sort.html">切換到選擇排序法 (S)</a>
+    </div>
+
+  <div id="controls">
+    <label>輸入陣列 (逗號分隔):</label>
+    <input id="inputArray" type="text" value="5,3,8,4,2,7,1,6" size="28" />
+    <button id="start">開始排序</button>
+    <button id="random">隨機產生</button>
+    <button id="reset">重設</button>
+    <label>速度:
+      <input id="speed" type="range" min="50" max="800" value="220" />
+    </label>
+  </div>
+
+  <div id="arrayContainer"></div>
+  <div id="info">
+    <h2>操作步驟</h2>
+    <ol id="steps"></ol>
+  </div>
+  <div id="complexity">
+    <strong>時間複雜度：</strong>
+    <ul>
+      <li>Best: O(n)</li>
+      <li>Average: O(n²)</li>
+      <li>Worst: O(n²)</li>
+    </ul>
+    <strong>空間複雜度：</strong>O(1)（就地排序）
+  </div>
+  <div id="log"><strong>執行紀錄：</strong><br /></div>
+
+  <script>
+      // 快捷鍵切換功能
+      document.addEventListener('keydown', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.key === 's' || e.key === 'S') {
+          window.location.href = 'selection_sort.html';
+        }
+      });
+
+    const container = document.getElementById("arrayContainer");
+    const stepsEl = document.getElementById("steps");
+    const log = document.getElementById("log");
+    const speedInput = document.getElementById("speed");
+
+    let arr = [];
+    let timer = null;
+    let currentStepArr = [];
+    let running = false;
+
+    function renderArray(data) {
+      container.innerHTML = "";
+      data.forEach((val, i) => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = `${Math.max(val, 10) * 2}px`;
+        bar.innerHTML = `<span>${val}</span>`;
+        bar.dataset.index = i;
+        container.appendChild(bar);
+      });
+    }
+
+    function addStep(text) {
+      const li = document.createElement("li");
+      li.textContent = text;
+      stepsEl.appendChild(li);
+      stepsEl.scrollTop = stepsEl.scrollHeight;
+      log.innerHTML += `<div>${text}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function setBarState(i, className) {
+      const bar = container.querySelector(`.bar[data-index="${i}"]`);
+      if (bar) {
+        bar.className = "bar " + className;
+      }
+    }
+
+    function resetStates() {
+      container.querySelectorAll(".bar").forEach((bar) => {
+        bar.className = "bar";
+      });
+    }
+
+    function bubbleSortVisual(items) {
+      const n = items.length;
+      let swapped;
+      let passes = 0;
+      const steps = [];
+      const dataCopy = items.slice();
+
+      do {
+        swapped = false;
+        for (let j = 0; j < n - passes - 1; j++) {
+          const stepCompare = {
+            type: "compare",
+            i: j,
+            j: j + 1,
+            data: dataCopy.slice(),
+          };
+          steps.push(stepCompare);
+
+          if (dataCopy[j] > dataCopy[j + 1]) {
+            const tmp = dataCopy[j];
+            dataCopy[j] = dataCopy[j + 1];
+            dataCopy[j + 1] = tmp;
+            swapped = true;
+
+            steps.push({
+              type: "swap",
+              i: j,
+              j: j + 1,
+              data: dataCopy.slice(),
+            });
+          }
+        }
+        steps.push({
+          type: "markSorted",
+          index: n - passes - 1,
+          data: dataCopy.slice(),
+        });
+        passes++;
+      } while (swapped);
+
+      for (let k = 0; k < n; k++) {
+        steps.push({
+          type: "finalSorted",
+          index: k,
+          data: dataCopy.slice(),
+        });
+      }
+
+      return steps;
+    }
+
+    function playSteps(steps) {
+      let idx = 0;
+      running = true;
+
+      function exec() {
+        if (idx >= steps.length) {
+          running = false;
+          addStep("排序完成！最終結果：" + arr.join(", "));
+          return;
+        }
+
+        const s = steps[idx];
+        renderArray(s.data);
+        resetStates();
+
+        if (s.type === "compare") {
+          setBarState(s.i, "compare");
+          setBarState(s.j, "compare");
+          addStep(`比較 idx=${s.i} (${s.data[s.i]}) 與 idx=${s.j} (${s.data[s.j]})`);
+        } else if (s.type === "swap") {
+          setBarState(s.i, "swap");
+          setBarState(s.j, "swap");
+          addStep(`交換 idx=${s.i} 與 idx=${s.j} => [${s.data.join(", ")}]`);
+        } else if (s.type === "markSorted") {
+          setBarState(s.index, "sorted");
+          addStep(`第 ${s.index} 個位置值已確定（最大值已放到最右）`);
+        } else if (s.type === "finalSorted") {
+          setBarState(s.index, "sorted");
+        }
+
+        idx++;
+        timer = setTimeout(exec, Number(speedInput.value));
+      }
+      exec();
+    }
+
+    function startSort() {
+      if (running) return;
+      const input = document.getElementById("inputArray").value;
+      if (!input.trim()) {
+        alert("請輸入數字陣列");
+        return;
+      }
+      arr = input.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
+      if (arr.length < 2) {
+        alert("請至少輸入 2 個數字");
+        return;
+      }
+      stepsEl.innerHTML = "";
+      log.innerHTML = "<strong>執行紀錄：</strong><br />";
+      renderArray(arr);
+      addStep("開始氣泡排序。初始陣列: " + arr.join(", "));
+      const steps = bubbleSortVisual(arr);
+      playSteps(steps);
+    }
+
+    function randomArray() {
+      if (running) return;
+      const size = 8;
+      const list = Array.from({ length: size }, () => Math.floor(Math.random() * 90) + 10);
+      document.getElementById("inputArray").value = list.join(", ");
+      arr = list;
+      renderArray(arr);
+      stepsEl.innerHTML = "";
+      log.innerHTML = "<strong>執行紀錄：</strong><br />";
+      addStep("已產生隨機陣列: " + arr.join(", "));
+    }
+
+    function reset() {
+      if (timer) clearTimeout(timer);
+      running = false;
+      stepsEl.innerHTML = "";
+      log.innerHTML = "<strong>執行紀錄：</strong><br />";
+      arr = document.getElementById("inputArray").value.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
+      renderArray(arr);
+      addStep("已重設到輸入陣列，等待你按開始。");
+    }
+
+    document.getElementById("start").addEventListener("click", startSort);
+    document.getElementById("random").addEventListener("click", randomArray);
+    document.getElementById("reset").addEventListener("click", reset);
+
+    randomArray();
+  </script>
+</body>
+>>>>>>> de6c0ae8fef679c2b1bd5208a62e2b307992b804
 </html>
