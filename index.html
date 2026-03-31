@@ -19,13 +19,21 @@
   </style>
 </head>
 <body>
+
   <h1>氣泡排序 (Bubble Sort) 互動教學</h1>
   <p>說明：每回合從左到右兩兩比較，若左大於右則交換，最右逐步形成已排序最大值。</p>
+
+  <nav style="margin-bottom: 18px;">
+    <a href="bubble_sort.html">氣泡排序法教學</a> |
+    <a href="selection_sort.html">選擇排序法教學</a> |
+    <a href="insertion_sort.html">插入排序法教學</a>
+  </nav>
 
   <div id="controls">
     <label>輸入陣列 (逗號分隔):</label>
     <input id="inputArray" type="text" value="5,3,8,4,2,7,1,6" size="28" />
     <button id="start">開始排序</button>
+    <button id="step">單步執行</button>
     <button id="random">隨機產生</button>
     <button id="reset">重設</button>
     <label>速度:
@@ -59,6 +67,9 @@
     let timer = null;
     let currentStepArr = [];
     let running = false;
+    let stepMode = false;
+    let stepIdx = 0;
+    let stepList = [];
 
     function renderArray(data) {
       container.innerHTML = "";
@@ -148,18 +159,16 @@
     function playSteps(steps) {
       let idx = 0;
       running = true;
-
+      stepMode = false;
       function exec() {
         if (idx >= steps.length) {
           running = false;
           addStep("排序完成！最終結果：" + arr.join(", "));
           return;
         }
-
         const s = steps[idx];
         renderArray(s.data);
         resetStates();
-
         if (s.type === "compare") {
           setBarState(s.i, "compare");
           setBarState(s.j, "compare");
@@ -174,11 +183,45 @@
         } else if (s.type === "finalSorted") {
           setBarState(s.index, "sorted");
         }
-
         idx++;
         timer = setTimeout(exec, Number(speedInput.value));
       }
       exec();
+    }
+
+    function playStepsStepMode(steps) {
+      stepMode = true;
+      running = true;
+      stepList = steps;
+      stepIdx = 0;
+      doStep();
+    }
+
+    function doStep() {
+      if (!stepMode || !running) return;
+      if (stepIdx >= stepList.length) {
+        running = false;
+        addStep("排序完成！最終結果：" + arr.join(", "));
+        return;
+      }
+      const s = stepList[stepIdx];
+      renderArray(s.data);
+      resetStates();
+      if (s.type === "compare") {
+        setBarState(s.i, "compare");
+        setBarState(s.j, "compare");
+        addStep(`比較 idx=${s.i} (${s.data[s.i]}) 與 idx=${s.j} (${s.data[s.j]})`);
+      } else if (s.type === "swap") {
+        setBarState(s.i, "swap");
+        setBarState(s.j, "swap");
+        addStep(`交換 idx=${s.i} 與 idx=${s.j} => [${s.data.join(", ")}]`);
+      } else if (s.type === "markSorted") {
+        setBarState(s.index, "sorted");
+        addStep(`第 ${s.index} 個位置值已確定（最大值已放到最右）`);
+      } else if (s.type === "finalSorted") {
+        setBarState(s.index, "sorted");
+      }
+      stepIdx++;
     }
 
     function startSort() {
@@ -199,6 +242,26 @@
       addStep("開始氣泡排序。初始陣列: " + arr.join(", "));
       const steps = bubbleSortVisual(arr);
       playSteps(steps);
+    }
+
+    function startStepSort() {
+      if (running) return;
+      const input = document.getElementById("inputArray").value;
+      if (!input.trim()) {
+        alert("請輸入數字陣列");
+        return;
+      }
+      arr = input.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
+      if (arr.length < 2) {
+        alert("請至少輸入 2 個數字");
+        return;
+      }
+      stepsEl.innerHTML = "";
+      log.innerHTML = "<strong>執行紀錄：</strong><br />";
+      renderArray(arr);
+      addStep("開始氣泡排序（單步模式）。初始陣列: " + arr.join(", "));
+      const steps = bubbleSortVisual(arr);
+      playStepsStepMode(steps);
     }
 
     function randomArray() {
@@ -224,6 +287,13 @@
     }
 
     document.getElementById("start").addEventListener("click", startSort);
+    document.getElementById("step").addEventListener("click", function() {
+      if (!stepMode || !running) {
+        startStepSort();
+      } else {
+        doStep();
+      }
+    });
     document.getElementById("random").addEventListener("click", randomArray);
     document.getElementById("reset").addEventListener("click", reset);
 
