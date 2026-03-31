@@ -27,7 +27,14 @@
     <a href="bubble_sort.html">氣泡排序法教學</a> |
     <a href="selection_sort.html">選擇排序法教學</a> |
     <a href="insertion_sort.html">插入排序法教學</a>
-  </nav>
+    <span style="margin-left:24px">
+      <label for="sortSelect"><strong>切換排序法：</strong></label>
+      <select id="sortSelect">
+        <option value="index.html">氣泡排序</option>
+        <option value="selection_sort.html">選擇排序</option>
+        <option value="insertion_sort.html">插入排序</option>
+      </select>
+    </span>
 
   <div id="controls">
     <label>輸入陣列 (逗號分隔):</label>
@@ -58,6 +65,23 @@
   <div id="log"><strong>執行紀錄：</strong><br /></div>
 
   <script>
+    // 切換排序法下拉選單自動跳轉
+    document.addEventListener('DOMContentLoaded', function() {
+      const select = document.getElementById('sortSelect');
+      // 根據目前頁面自動選中
+      const page = location.pathname.split('/').pop();
+      if (page && select) {
+        for (let i = 0; i < select.options.length; i++) {
+          if (select.options[i].value === page) {
+            select.selectedIndex = i;
+            break;
+          }
+        }
+        select.addEventListener('change', function() {
+          location.href = select.value;
+        });
+      }
+    });
     const container = document.getElementById("arrayContainer");
     const stepsEl = document.getElementById("steps");
     const log = document.getElementById("log");
