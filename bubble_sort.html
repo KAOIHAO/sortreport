@@ -1,496 +1,348 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <title>氣泡排序( Bubble Sort ) 視覺化教學</title>
-  <style>
-    body { font-family: "微軟正黑體", sans-serif; padding: 20px; background: #f7f9fc; }
-    h1,h2 { color: #2c3e50; }
-    #arrayContainer { display: flex; align-items: flex-end; height: 270px; margin: 20px 0; gap: 6px; }
-    .bar { width: 28px; background: #3498db; border-radius: 4px; text-align: center; color: white; font-size: 12px; position: relative; }
-    .bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; font-weight: 700; }
-    .bar.compare { background: #f1c40f; }
-    .bar.swap { background: #e74c3c; }
-    .bar.sorted { background: #2ecc71; }
-    #controls { margin-bottom: 16px; }
-    button, input { border: 1px solid #ccc; border-radius: 5px; padding: 8px 12px; margin-right: 8px; font-size: 14px; }
-    #log, #info { background: #ffffff; border: 1px solid #dce2e8; border-radius: 8px; padding: 12px; max-height: 240px; overflow: auto; margin-top: 12px; }
-    #complexity { margin-top: 12px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>氣泡排序法 - 進階互動教學</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --bg: #f4f7f6;
+            --dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 { color: var(--primary); margin: 0; }
+
+        .title-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title-header h1 {
+            flex: 1;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #95a5a6;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .back-link:hover {
+            background: #7f8c8d;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--secondary); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-step { background: #9b59b6; color: white; }
+        
+        button:hover:not(:disabled) { opacity: 0.8; transform: translateY(-1px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* 視覺化區塊 */
+        .visualizer-box {
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 8px;
+            margin: 30px 0;
+            border-bottom: 3px solid var(--dark);
+            padding-bottom: 5px;
+        }
+
+        .bar {
+            width: 40px;
+            background: var(--primary);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 5px 5px 0 0;
+            transition: height 0.3s, background-color 0.3s;
+            padding-bottom: 5px;
+        }
+
+        /* 步驟紀錄 */
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #log-container {
+            height: 150px;
+            overflow-y: auto;
+            background: #2d3436;
+            color: #bdc3c7;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+        }
+
+        .log-swap { color: #ff7675; }
+        .log-compare { color: #f1c40f; }
+        .log-done { color: #55efc4; }
+
+        input[type="range"] { width: 100%; cursor: pointer; }
+    </style>
 </head>
 <body>
-  <h1>氣泡排序 (Bubble Sort) 互動教學</h1>
-  <p>說明：每回合從左到右兩兩比較，若左大於右則交換，最右逐步形成已排序最大值。</p>
 
-    <!-- 快捷切換區塊 -->
-    <div id="shortcut-switch" style="margin-bottom: 18px;">
-      <strong>切換：</strong>
-      <a href="selection_sort.html">切換到選擇排序法 (S)</a>
+<div class="container">
+    <div class="title-header">
+        <h1>氣泡排序法 (Bubble Sort) 互動平台</h1>
+        <a href="index.html" class="back-link">← 返回首頁</a>
     </div>
 
-  <div id="controls">
-    <label>輸入陣列 (逗號分隔):</label>
-    <input id="inputArray" type="text" value="5,3,8,4,2,7,1,6" size="28" />
-    <button id="start">開始排序</button>
-    <button id="random">隨機產生</button>
-    <button id="reset">重設</button>
-    <label>速度:
-      <input id="speed" type="range" min="50" max="800" value="220" />
-    </label>
-  </div>
+    <div class="control-panel">
+        <div class="input-group">
+            <label><strong>自定義數字 (逗號隔開):</strong></label>
+            <input type="text" id="userInput" placeholder="例如: 45, 12, 89, 3, 27">
+            <div class="button-group">
+                <button class="btn-primary" onclick="initArrayFromInput()">套用並重置</button>
+                <button style="background: #95a5a6; color:white;" onclick="generateRandom()">隨機產生</button>
+            </div>
+        </div>
 
-  <div id="arrayContainer"></div>
-  <div id="info">
-    <h2>操作步驟</h2>
-    <ol id="steps"></ol>
-  </div>
-  <div id="complexity">
-    <strong>時間複雜度：</strong>
-    <ul>
-      <li>Best: O(n)</li>
-      <li>Average: O(n²)</li>
-      <li>Worst: O(n²)</li>
-    </ul>
-    <strong>空間複雜度：</strong>O(1)（就地排序）
-  </div>
-  <div id="log"><strong>執行紀錄：</strong><br /></div>
-
-  <script>
-      // 快捷鍵切換功能
-      document.addEventListener('keydown', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (e.key === 's' || e.key === 'S') {
-          window.location.href = 'selection_sort.html';
-        }
-      });
-
-    const container = document.getElementById("arrayContainer");
-    const stepsEl = document.getElementById("steps");
-    const log = document.getElementById("log");
-    const speedInput = document.getElementById("speed");
-
-    let arr = [];
-    let timer = null;
-    let currentStepArr = [];
-    let running = false;
-
-    function renderArray(data) {
-      container.innerHTML = "";
-      data.forEach((val, i) => {
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.style.height = `${Math.max(val, 10) * 2}px`;
-        bar.innerHTML = `<span>${val}</span>`;
-        bar.dataset.index = i;
-        container.appendChild(bar);
-      });
-    }
-
-    function addStep(text) {
-      const li = document.createElement("li");
-      li.textContent = text;
-      stepsEl.appendChild(li);
-      stepsEl.scrollTop = stepsEl.scrollHeight;
-      log.innerHTML += `<div>${text}</div>`;
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function setBarState(i, className) {
-      const bar = container.querySelector(`.bar[data-index="${i}"]`);
-      if (bar) {
-        bar.className = "bar " + className;
-      }
-    }
-
-    function resetStates() {
-      container.querySelectorAll(".bar").forEach((bar) => {
-        bar.className = "bar";
-      });
-    }
-
-    function bubbleSortVisual(items) {
-      const n = items.length;
-      let swapped;
-      let passes = 0;
-      const steps = [];
-      const dataCopy = items.slice();
-
-      do {
-        swapped = false;
-        for (let j = 0; j < n - passes - 1; j++) {
-          const stepCompare = {
-            type: "compare",
-            i: j,
-            j: j + 1,
-            data: dataCopy.slice(),
-          };
-          steps.push(stepCompare);
-
-          if (dataCopy[j] > dataCopy[j + 1]) {
-            const tmp = dataCopy[j];
-            dataCopy[j] = dataCopy[j + 1];
-            dataCopy[j + 1] = tmp;
-            swapped = true;
-
-            steps.push({
-              type: "swap",
-              i: j,
-              j: j + 1,
-              data: dataCopy.slice(),
-            });
-          }
-        }
-        steps.push({
-          type: "markSorted",
-          index: n - passes - 1,
-          data: dataCopy.slice(),
-        });
-        passes++;
-      } while (swapped);
-
-      for (let k = 0; k < n; k++) {
-        steps.push({
-          type: "finalSorted",
-          index: k,
-          data: dataCopy.slice(),
-        });
-      }
-
-      return steps;
-    }
-
-    function playSteps(steps) {
-      let idx = 0;
-      running = true;
-
-      function exec() {
-        if (idx >= steps.length) {
-          running = false;
-          addStep("排序完成！最終結果：" + arr.join(", "));
-          return;
-        }
-
-        const s = steps[idx];
-        renderArray(s.data);
-        resetStates();
-
-        if (s.type === "compare") {
-          setBarState(s.i, "compare");
-          setBarState(s.j, "compare");
-          addStep(`比較 idx=${s.i} (${s.data[s.i]}) 與 idx=${s.j} (${s.data[s.j]})`);
-        } else if (s.type === "swap") {
-          setBarState(s.i, "swap");
-          setBarState(s.j, "swap");
-          addStep(`交換 idx=${s.i} 與 idx=${s.j} => [${s.data.join(", ")}]`);
-        } else if (s.type === "markSorted") {
-          setBarState(s.index, "sorted");
-          addStep(`第 ${s.index} 個位置值已確定（最大值已放到最右）`);
-        } else if (s.type === "finalSorted") {
-          setBarState(s.index, "sorted");
-        }
-
-        idx++;
-        timer = setTimeout(exec, Number(speedInput.value));
-      }
-      exec();
-    }
-
-    function startSort() {
-      if (running) return;
-      const input = document.getElementById("inputArray").value;
-      if (!input.trim()) {
-        alert("請輸入數字陣列");
-        return;
-      }
-      arr = input.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
-      if (arr.length < 2) {
-        alert("請至少輸入 2 個數字");
-        return;
-      }
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      renderArray(arr);
-      addStep("開始氣泡排序。初始陣列: " + arr.join(", "));
-      const steps = bubbleSortVisual(arr);
-      playSteps(steps);
-    }
-
-    function randomArray() {
-      if (running) return;
-      const size = 8;
-      const list = Array.from({ length: size }, () => Math.floor(Math.random() * 90) + 10);
-      document.getElementById("inputArray").value = list.join(", ");
-      arr = list;
-      renderArray(arr);
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      addStep("已產生隨機陣列: " + arr.join(", "));
-    }
-
-    function reset() {
-      if (timer) clearTimeout(timer);
-      running = false;
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      arr = document.getElementById("inputArray").value.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
-      renderArray(arr);
-      addStep("已重設到輸入陣列，等待你按開始。");
-    }
-
-    document.getElementById("start").addEventListener("click", startSort);
-    document.getElementById("random").addEventListener("click", randomArray);
-    document.getElementById("reset").addEventListener("click", reset);
-
-    randomArray();
-  </script>
-</body>
-=======
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <title>氣泡排序( Bubble Sort ) 視覺化教學</title>
-  <style>
-    body { font-family: "微軟正黑體", sans-serif; padding: 20px; background: #f7f9fc; }
-    h1,h2 { color: #2c3e50; }
-    #arrayContainer { display: flex; align-items: flex-end; height: 270px; margin: 20px 0; gap: 6px; }
-    .bar { width: 28px; background: #3498db; border-radius: 4px; text-align: center; color: white; font-size: 12px; position: relative; }
-    .bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; font-weight: 700; }
-    .bar.compare { background: #f1c40f; }
-    .bar.swap { background: #e74c3c; }
-    .bar.sorted { background: #2ecc71; }
-    #controls { margin-bottom: 16px; }
-    button, input { border: 1px solid #ccc; border-radius: 5px; padding: 8px 12px; margin-right: 8px; font-size: 14px; }
-    #log, #info { background: #ffffff; border: 1px solid #dce2e8; border-radius: 8px; padding: 12px; max-height: 240px; overflow: auto; margin-top: 12px; }
-    #complexity { margin-top: 12px; }
-  </style>
-</head>
-<body>
-  <h1>氣泡排序 (Bubble Sort) 互動教學</h1>
-  <p>說明：每回合從左到右兩兩比較，若左大於右則交換，最右逐步形成已排序最大值。</p>
-
-    <!-- 快捷切換區塊 -->
-    <div id="shortcut-switch" style="margin-bottom: 18px;">
-      <strong>切換：</strong>
-      <a href="selection_sort.html">切換到選擇排序法 (S)</a>
+        <div class="input-group">
+            <label><strong>動畫速度 (越左越快):</strong></label>
+            <input type="range" id="speedRange" min="50" max="1500" value="500" style="direction: rtl;">
+            <div class="button-group">
+                <button id="autoBtn" class="btn-success" onclick="startAuto()">自動執行</button>
+                <button id="stepBtn" class="btn-step" onclick="triggerNextStep()">單步執行</button>
+                <button class="btn-accent" onclick="window.location.reload()">重新整理</button>
+            </div>
+        </div>
     </div>
 
-  <div id="controls">
-    <label>輸入陣列 (逗號分隔):</label>
-    <input id="inputArray" type="text" value="5,3,8,4,2,7,1,6" size="28" />
-    <button id="start">開始排序</button>
-    <button id="random">隨機產生</button>
-    <button id="reset">重設</button>
-    <label>速度:
-      <input id="speed" type="range" min="50" max="800" value="220" />
-    </label>
-  </div>
+    <div class="status-info">
+        <span id="current-action">狀態：等待開始</span>
+        <span id="step-count">步數：0</span>
+    </div>
+    <div class="visualizer-box" id="chart"></div>
 
-  <div id="arrayContainer"></div>
-  <div id="info">
-    <h2>操作步驟</h2>
-    <ol id="steps"></ol>
-  </div>
-  <div id="complexity">
-    <strong>時間複雜度：</strong>
-    <ul>
-      <li>Best: O(n)</li>
-      <li>Average: O(n²)</li>
-      <li>Worst: O(n²)</li>
-    </ul>
-    <strong>空間複雜度：</strong>O(1)（就地排序）
-  </div>
-  <div id="log"><strong>執行紀錄：</strong><br /></div>
+    <div id="log-container">
+        <div>系統就緒，請輸入數字或點擊自動執行。</div>
+    </div>
+</div>
 
-  <script>
-      // 快捷鍵切換功能
-      document.addEventListener('keydown', function(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (e.key === 's' || e.key === 'S') {
-          window.location.href = 'selection_sort.html';
+<script>
+    let data = [];
+    let isSorting = false;
+    let stepResolver = null; // 用於單步執行的 Promise 控制
+    let mode = 'idle'; // 'auto', 'step', 'idle'
+    let totalSteps = 0;
+
+    const chart = document.getElementById('chart');
+    const logBox = document.getElementById('log-container');
+    const actionText = document.getElementById('current-action');
+    const stepText = document.getElementById('step-count');
+
+    // 初始化：隨機產生
+    function generateRandom() {
+        const randomData = Array.from({length: 10}, () => Math.floor(Math.random() * 90) + 10);
+        document.getElementById('userInput').value = randomData.join(', ');
+        initArrayFromInput();
+    }
+
+    // 初始化：讀取輸入
+    function initArrayFromInput() {
+        const input = document.getElementById('userInput').value;
+        data = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        
+        if (data.length === 0) {
+            alert("請輸入有效的數字！");
+            return;
         }
-      });
-
-    const container = document.getElementById("arrayContainer");
-    const stepsEl = document.getElementById("steps");
-    const log = document.getElementById("log");
-    const speedInput = document.getElementById("speed");
-
-    let arr = [];
-    let timer = null;
-    let currentStepArr = [];
-    let running = false;
-
-    function renderArray(data) {
-      container.innerHTML = "";
-      data.forEach((val, i) => {
-        const bar = document.createElement("div");
-        bar.className = "bar";
-        bar.style.height = `${Math.max(val, 10) * 2}px`;
-        bar.innerHTML = `<span>${val}</span>`;
-        bar.dataset.index = i;
-        container.appendChild(bar);
-      });
+        
+        renderBars();
+        logBox.innerHTML = '<div>陣列已重置。</div>';
+        totalSteps = 0;
+        updateUI(0, "準備就緒");
+        isSorting = false;
+        mode = 'idle';
     }
 
-    function addStep(text) {
-      const li = document.createElement("li");
-      li.textContent = text;
-      stepsEl.appendChild(li);
-      stepsEl.scrollTop = stepsEl.scrollHeight;
-      log.innerHTML += `<div>${text}</div>`;
-      log.scrollTop = log.scrollHeight;
+    // 渲染長條圖
+    function renderBars() {
+        chart.innerHTML = '';
+        const maxVal = Math.max(...data);
+        data.forEach((val, i) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.id = `bar-${i}`;
+            bar.style.height = `${(val / maxVal) * 100}%`;
+            bar.innerText = val;
+            chart.appendChild(bar);
+        });
     }
 
-    function setBarState(i, className) {
-      const bar = container.querySelector(`.bar[data-index="${i}"]`);
-      if (bar) {
-        bar.className = "bar " + className;
-      }
+    // 更新狀態文字與紀錄
+    function updateUI(stepInc, msg, className = "") {
+        totalSteps += stepInc;
+        stepText.innerText = `步數：${totalSteps}`;
+        actionText.innerText = `狀態：${msg}`;
+        const entry = document.createElement('div');
+        if(className) entry.className = className;
+        entry.innerText = `> ${msg}`;
+        logBox.prepend(entry);
     }
 
-    function resetStates() {
-      container.querySelectorAll(".bar").forEach((bar) => {
-        bar.className = "bar";
-      });
-    }
-
-    function bubbleSortVisual(items) {
-      const n = items.length;
-      let swapped;
-      let passes = 0;
-      const steps = [];
-      const dataCopy = items.slice();
-
-      do {
-        swapped = false;
-        for (let j = 0; j < n - passes - 1; j++) {
-          const stepCompare = {
-            type: "compare",
-            i: j,
-            j: j + 1,
-            data: dataCopy.slice(),
-          };
-          steps.push(stepCompare);
-
-          if (dataCopy[j] > dataCopy[j + 1]) {
-            const tmp = dataCopy[j];
-            dataCopy[j] = dataCopy[j + 1];
-            dataCopy[j + 1] = tmp;
-            swapped = true;
-
-            steps.push({
-              type: "swap",
-              i: j,
-              j: j + 1,
-              data: dataCopy.slice(),
+    // 等待函數 (支援自動/單步)
+    function wait() {
+        if (mode === 'step') {
+            return new Promise(resolve => {
+                stepResolver = resolve;
             });
-          }
+        } else {
+            const ms = document.getElementById('speedRange').value;
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
-        steps.push({
-          type: "markSorted",
-          index: n - passes - 1,
-          data: dataCopy.slice(),
-        });
-        passes++;
-      } while (swapped);
-
-      for (let k = 0; k < n; k++) {
-        steps.push({
-          type: "finalSorted",
-          index: k,
-          data: dataCopy.slice(),
-        });
-      }
-
-      return steps;
     }
 
-    function playSteps(steps) {
-      let idx = 0;
-      running = true;
-
-      function exec() {
-        if (idx >= steps.length) {
-          running = false;
-          addStep("排序完成！最終結果：" + arr.join(", "));
-          return;
+    // 觸發下一步 (給按鈕點擊)
+    function triggerNextStep() {
+        if (!isSorting) {
+            mode = 'step';
+            bubbleSort();
+            return;
         }
-
-        const s = steps[idx];
-        renderArray(s.data);
-        resetStates();
-
-        if (s.type === "compare") {
-          setBarState(s.i, "compare");
-          setBarState(s.j, "compare");
-          addStep(`比較 idx=${s.i} (${s.data[s.i]}) 與 idx=${s.j} (${s.data[s.j]})`);
-        } else if (s.type === "swap") {
-          setBarState(s.i, "swap");
-          setBarState(s.j, "swap");
-          addStep(`交換 idx=${s.i} 與 idx=${s.j} => [${s.data.join(", ")}]`);
-        } else if (s.type === "markSorted") {
-          setBarState(s.index, "sorted");
-          addStep(`第 ${s.index} 個位置值已確定（最大值已放到最右）`);
-        } else if (s.type === "finalSorted") {
-          setBarState(s.index, "sorted");
+        if (stepResolver) {
+            const resolve = stepResolver;
+            stepResolver = null;
+            resolve();
         }
-
-        idx++;
-        timer = setTimeout(exec, Number(speedInput.value));
-      }
-      exec();
     }
 
-    function startSort() {
-      if (running) return;
-      const input = document.getElementById("inputArray").value;
-      if (!input.trim()) {
-        alert("請輸入數字陣列");
-        return;
-      }
-      arr = input.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
-      if (arr.length < 2) {
-        alert("請至少輸入 2 個數字");
-        return;
-      }
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      renderArray(arr);
-      addStep("開始氣泡排序。初始陣列: " + arr.join(", "));
-      const steps = bubbleSortVisual(arr);
-      playSteps(steps);
+    // 開始自動執行
+    function startAuto() {
+        if (isSorting && mode === 'step') {
+            mode = 'auto';
+            if (stepResolver) triggerNextStep();
+            return;
+        }
+        mode = 'auto';
+        bubbleSort();
     }
 
-    function randomArray() {
-      if (running) return;
-      const size = 8;
-      const list = Array.from({ length: size }, () => Math.floor(Math.random() * 90) + 10);
-      document.getElementById("inputArray").value = list.join(", ");
-      arr = list;
-      renderArray(arr);
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      addStep("已產生隨機陣列: " + arr.join(", "));
+    // 氣泡排序核心邏輯
+    async function bubbleSort() {
+        if (isSorting) return;
+        isSorting = true;
+        
+        const n = data.length;
+        const bars = document.getElementsByClassName('bar');
+
+        for (let i = 0; i < n; i++) {
+            for (let j = 0; j < n - i - 1; j++) {
+                // 標示比較
+                bars[j].style.backgroundColor = '#f1c40f';
+                bars[j+1].style.backgroundColor = '#f1c40f';
+                updateUI(1, `比較 index ${j}(${data[j]}) 與 ${j+1}(${data[j+1]})`, "log-compare");
+                
+                await wait();
+
+                if (data[j] > data[j+1]) {
+                    updateUI(0, `交換 ${data[j]} ↔ ${data[j+1]}`, "log-swap");
+                    // 數據交換
+                    [data[j], data[j+1]] = [data[j+1], data[j]];
+                    
+                    // 視覺交換 (簡單更新高度)
+                    bars[j].style.height = `${(data[j] / Math.max(...data)) * 100}%`;
+                    bars[j].innerText = data[j];
+                    bars[j+1].style.height = `${(data[j+1] / Math.max(...data)) * 100}%`;
+                    bars[j+1].innerText = data[j+1];
+                    
+                    bars[j].style.backgroundColor = '#e74c3c';
+                    bars[j+1].style.backgroundColor = '#e74c3c';
+                    await wait();
+                }
+
+                bars[j].style.backgroundColor = 'var(--primary)';
+                bars[j+1].style.backgroundColor = 'var(--primary)';
+            }
+            // 標示完成位子
+            bars[n - i - 1].style.backgroundColor = 'var(--secondary)';
+            updateUI(0, `元素 ${data[n-i-1]} 已歸位`, "log-done");
+        }
+        
+        isSorting = false;
+        mode = 'idle';
+        updateUI(0, "排序完整結束！", "log-done");
     }
 
-    function reset() {
-      if (timer) clearTimeout(timer);
-      running = false;
-      stepsEl.innerHTML = "";
-      log.innerHTML = "<strong>執行紀錄：</strong><br />";
-      arr = document.getElementById("inputArray").value.split(",").map((p) => Number(p.trim())).filter((x) => !isNaN(x));
-      renderArray(arr);
-      addStep("已重設到輸入陣列，等待你按開始。");
-    }
+    // 網頁載入時初始化
+    window.onload = generateRandom;
+</script>
 
-    document.getElementById("start").addEventListener("click", startSort);
-    document.getElementById("random").addEventListener("click", randomArray);
-    document.getElementById("reset").addEventListener("click", reset);
-
-    randomArray();
-  </script>
 </body>
->>>>>>> de6c0ae8fef679c2b1bd5208a62e2b307992b804
 </html>
