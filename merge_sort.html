@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>氣泡排序法 - 進階互動教學</title>
+    <title>合併排序法 - 進階互動教學</title>
     <style>
         :root {
-            --primary: #3498db;
+            --primary: #1abc9c;
             --secondary: #2ecc71;
             --accent: #e74c3c;
             --bg: #f4f7f6;
@@ -148,9 +148,10 @@
             font-size: 13px;
         }
 
-        .log-swap { color: #ff7675; }
+        .log-merge { color: #55efc4; }
         .log-compare { color: #f1c40f; }
         .log-done { color: #55efc4; }
+        .log-divide { color: #a29bfe; }
 
         input[type="range"] { width: 100%; cursor: pointer; }
 
@@ -208,7 +209,7 @@
 
 <div class="container">
     <div class="title-header">
-        <h1>氣泡排序法 (Bubble Sort) 互動平台</h1>
+        <h1>合併排序法 (Merge Sort) 互動平台</h1>
         <a href="index.html" class="back-link">← 返回首頁</a>
     </div>
 
@@ -259,16 +260,17 @@
     </div>
 
     <div class="info-box">
-        <strong>💡 氣泡排序法 (Bubble Sort) 說明：</strong><br>
-        氣泡排序透過相鄰元素的比較和交換，逐步將最大的元素「浮動」到陣列末尾。是最直觀的排序算法，但時間複雜度為 O(n²)，效率較低。
+        <strong>💡 合併排序法 (Merge Sort) 說明：</strong><br>
+        合併排序是一種分治算法，通過將陣列分割成更小的部分，分別排序，再逐步合併回來形成最終的排序結果。時間複雜度為 O(n log n)。
     </div>
 </div>
 
 <script>
     let data = [];
+    let originalData = [];
     let isSorting = false;
-    let stepResolver = null; // 用於單步執行的 Promise 控制
-    let mode = 'idle'; // 'auto', 'step', 'idle'
+    let stepResolver = null;
+    let mode = 'idle';
     let totalSteps = 0;
 
     // 統計變量
@@ -285,14 +287,6 @@
     const swapsStatDiv = document.getElementById('swaps-stat');
     const timeStatDiv = document.getElementById('time-stat');
 
-    // 初始化：隨機產生
-    function generateRandom() {
-        const randomData = Array.from({length: 10}, () => Math.floor(Math.random() * 90) + 10);
-        document.getElementById('userInput').value = randomData.join(', ');
-        initArrayFromInput();
-    }
-
-    // 初始化：讀取輸入
     function initArrayFromInput() {
         const input = document.getElementById('userInput').value;
         data = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
@@ -302,6 +296,7 @@
             return;
         }
         
+        originalData = [...data];
         renderBars();
         logBox.innerHTML = '<div>陣列已重置。</div>';
         totalSteps = 0;
@@ -316,7 +311,6 @@
         mode = 'idle';
     }
 
-    // 渲染長條圖
     function renderBars() {
         chart.innerHTML = '';
         const maxVal = Math.max(...data);
@@ -330,7 +324,6 @@
         });
     }
 
-    // 更新狀態文字與紀錄
     function updateUI(stepInc, msg, className = "") {
         totalSteps += stepInc;
         stepText.innerText = `步數：${totalSteps}`;
@@ -341,7 +334,6 @@
         logBox.prepend(entry);
     }
 
-    // 更新統計信息顯示
     function updateStatsDisplay() {
         comparisonsStatDiv.innerText = comparisons;
         swapsStatDiv.innerText = swaps;
@@ -352,7 +344,6 @@
         }
     }
 
-    // 等待函數 (支援自動/單步)
     function wait() {
         if (mode === 'step') {
             return new Promise(resolve => {
@@ -364,11 +355,10 @@
         }
     }
 
-    // 觸發下一步 (給按鈕點擊)
     function triggerNextStep() {
         if (!isSorting) {
             mode = 'step';
-            bubbleSort();
+            mergeSort();
             return;
         }
         if (stepResolver) {
@@ -378,7 +368,6 @@
         }
     }
 
-    // 開始自動執行
     function startAuto() {
         if (isSorting && mode === 'step') {
             mode = 'auto';
@@ -386,11 +375,20 @@
             return;
         }
         mode = 'auto';
-        bubbleSort();
+        mergeSort();
     }
 
-    // 氣泡排序核心邏輯
-    async function bubbleSort() {
+    async function colorize(indices, color) {
+        const bars = document.getElementsByClassName('bar');
+        indices.forEach(i => {
+            if (i >= 0 && i < bars.length) {
+                bars[i].style.backgroundColor = color;
+            }
+        });
+        await wait();
+    }
+
+    async function mergeSort() {
         if (isSorting) return;
         isSorting = true;
         
@@ -399,57 +397,126 @@
         swaps = 0;
         startTime = performance.now();
         
-        const n = data.length;
-        const bars = document.getElementsByClassName('bar');
-
-        for (let i = 0; i < n; i++) {
-            for (let j = 0; j < n - i - 1; j++) {
-                // 比較計數
-                comparisons++;
-                
-                // 標示比較
-                bars[j].style.backgroundColor = '#f1c40f';
-                bars[j+1].style.backgroundColor = '#f1c40f';
-                updateUI(1, `比較 index ${j}(${data[j]}) 與 ${j+1}(${data[j+1]})`, "log-compare");
-                updateStatsDisplay();
-                
-                await wait();
-
-                if (data[j] > data[j+1]) {
-                    swaps++;
-                    updateUI(0, `交換 ${data[j]} ↔ ${data[j+1]}`, "log-swap");
-                    // 數據交換
-                    [data[j], data[j+1]] = [data[j+1], data[j]];
-                    
-                    // 視覺交換 (簡單更新高度)
-                    bars[j].style.height = `${(data[j] / Math.max(...data)) * 100}%`;
-                    bars[j].innerText = data[j];
-                    bars[j+1].style.height = `${(data[j+1] / Math.max(...data)) * 100}%`;
-                    bars[j+1].innerText = data[j+1];
-                    
-                    bars[j].style.backgroundColor = '#e74c3c';
-                    bars[j+1].style.backgroundColor = '#e74c3c';
-                    updateStatsDisplay();
-                    await wait();
-                }
-
-                bars[j].style.backgroundColor = 'var(--primary)';
-                bars[j+1].style.backgroundColor = 'var(--primary)';
-            }
-            // 標示完成位子
-            bars[n - i - 1].style.backgroundColor = 'var(--secondary)';
-            updateUI(0, `元素 ${data[n-i-1]} 已歸位`, "log-done");
-        }
+        updateUI(1, "開始合併排序", "log-divide");
+        await mergeSortHelper(0, data.length - 1);
         
         endTime = performance.now();
         updateStatsDisplay();
         
         isSorting = false;
         mode = 'idle';
-        updateUI(0, "排序完整結束！", "log-done");
+        
+        const bars = document.getElementsByClassName('bar');
+        for (let i = 0; i < bars.length; i++) {
+            bars[i].style.backgroundColor = 'var(--secondary)';
+        }
+        updateUI(0, "排序完成！", "log-done");
     }
 
-    // 網頁載入時初始化
+    async function mergeSortHelper(left, right) {
+        if (left >= right) return;
+
+        const mid = Math.floor((left + right) / 2);
+        
+        updateUI(1, `分割: [${left}...${mid}] 和 [${mid+1}...${right}]`, "log-divide");
+        await colorize(range(left, mid + 1), '#f1c40f');
+        await colorize(range(mid + 1, right + 1), '#a29bfe');
+
+        await mergeSortHelper(left, mid);
+        await mergeSortHelper(mid + 1, right);
+        await merge(left, mid, right);
+    }
+
+    async function merge(left, mid, right) {
+        const leftArr = data.slice(left, mid + 1);
+        const rightArr = data.slice(mid + 1, right + 1);
+
+        updateUI(1, `合併 [${leftArr}] 和 [${rightArr}]`, "log-merge");
+
+        let i = 0, j = 0, k = left;
+        const bars = document.getElementsByClassName('bar');
+
+        while (i < leftArr.length && j < rightArr.length) {
+            comparisons++;
+            
+            // 標示比較
+            bars[left + i].style.backgroundColor = '#f1c40f';
+            bars[mid + 1 + j].style.backgroundColor = '#a29bfe';
+            updateUI(1, `比較 ${leftArr[i]} 與 ${rightArr[j]}`, "log-compare");
+            updateStatsDisplay();
+            
+            await wait();
+
+            if (leftArr[i] <= rightArr[j]) {
+                swaps++;
+                data[k] = leftArr[i];
+                updateUI(0, `放置 ${leftArr[i]} 到位置 ${k}`, "log-merge");
+                bars[k].style.height = `${(leftArr[i] / Math.max(...originalData)) * 100}%`;
+                bars[k].innerText = leftArr[i];
+                bars[k].style.backgroundColor = '#55efc4';
+                updateStatsDisplay();
+                i++;
+            } else {
+                swaps++;
+                data[k] = rightArr[j];
+                updateUI(0, `放置 ${rightArr[j]} 到位置 ${k}`, "log-merge");
+                bars[k].style.height = `${(rightArr[j] / Math.max(...originalData)) * 100}%`;
+                bars[k].innerText = rightArr[j];
+                bars[k].style.backgroundColor = '#55efc4';
+                updateStatsDisplay();
+                j++;
+            }
+            k++;
+            await wait();
+        }
+
+        // 複製剩餘元素
+        while (i < leftArr.length) {
+            swaps++;
+            data[k] = leftArr[i];
+            bars[k].style.height = `${(leftArr[i] / Math.max(...originalData)) * 100}%`;
+            bars[k].innerText = leftArr[i];
+            bars[k].style.backgroundColor = '#55efc4';
+            updateUI(0, `複製剩餘 ${leftArr[i]}`, "log-merge");
+            updateStatsDisplay();
+            i++;
+            k++;
+            await wait();
+        }
+
+        while (j < rightArr.length) {
+            swaps++;
+            data[k] = rightArr[j];
+            bars[k].style.height = `${(rightArr[j] / Math.max(...originalData)) * 100}%`;
+            bars[k].innerText = rightArr[j];
+            bars[k].style.backgroundColor = '#55efc4';
+            updateUI(0, `複製剩餘 ${rightArr[j]}`, "log-merge");
+            updateStatsDisplay();
+            j++;
+            k++;
+            await wait();
+        }
+    }
+
+    function range(start, end) {
+        return Array.from({length: end - start}, (_, i) => start + i);
+    }
+
+    function generateRandom() {
+        const size = Math.floor(Math.random() * 8) + 5; // 5-12 個數字
+        data = Array.from({length: size}, () => Math.floor(Math.random() * 100) + 1);
+        originalData = [...data];
+        renderBars();
+        logBox.innerHTML = '<div>已產生隨機陣列。</div>';
+        totalSteps = 0;
+        comparisons = 0;
+        swaps = 0;
+        updateStatsDisplay();
+        updateUI(0, "準備就緒");
+        isSorting = false;
+        mode = 'idle';
+    }
+
     window.onload = generateRandom;
 </script>
 

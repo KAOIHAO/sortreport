@@ -153,6 +153,55 @@
         .log-done { color: #55efc4; }
 
         input[type="range"] { width: 100%; cursor: pointer; }
+
+        /* 統計信息面板 */
+        .stats-panel {
+            background: #f0f8f7;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .info-box {
+            background: #e8f4f0;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--dark);
+        }
+
+        .info-box strong {
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -193,6 +242,26 @@
     <div id="log-container">
         <div>系統就緒，請輸入數字或點擊自動執行。</div>
     </div>
+
+    <div class="stats-panel">
+        <div class="stat-item">
+            <div class="stat-label">比較次數</div>
+            <div class="stat-value" id="comparisons-stat">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">交換次數</div>
+            <div class="stat-value" id="swaps-stat">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">執行時間</div>
+            <div class="stat-value" id="time-stat">0 s</div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>💡 選擇排序法 (Selection Sort) 說明：</strong><br>
+        選擇排序每次從未排序的部分中選擇最小的元素，將其放到已排序部分的末尾。時間複雜度為 O(n²)，交換次數相對較少。
+    </div>
 </div>
 <script>
     let data = [];
@@ -201,10 +270,19 @@
     let mode = 'idle'; // 'auto', 'step', 'idle'
     let totalSteps = 0;
 
+    // 統計變量
+    let comparisons = 0;
+    let swaps = 0;
+    let startTime = 0;
+    let endTime = 0;
+
     const chart = document.getElementById('chart');
     const logBox = document.getElementById('log-container');
     const actionText = document.getElementById('current-action');
     const stepText = document.getElementById('step-count');
+    const comparisonsStatDiv = document.getElementById('comparisons-stat');
+    const swapsStatDiv = document.getElementById('swaps-stat');
+    const timeStatDiv = document.getElementById('time-stat');
 
     // 初始化：隨機產生
     function generateRandom() {
@@ -226,6 +304,12 @@
         renderBars();
         logBox.innerHTML = '<div>陣列已重置。</div>';
         totalSteps = 0;
+        
+        // 重置統計變量
+        comparisons = 0;
+        swaps = 0;
+        updateStatsDisplay();
+        
         updateUI(0, "準備就緒");
         isSorting = false;
         mode = 'idle';
@@ -254,6 +338,17 @@
         if(className) entry.className = className;
         entry.innerText = `> ${msg}`;
         logBox.prepend(entry);
+    }
+
+    // 更新統計信息顯示
+    function updateStatsDisplay() {
+        comparisonsStatDiv.innerText = comparisons;
+        swapsStatDiv.innerText = swaps;
+        
+        if (startTime > 0 && endTime > 0) {
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            timeStatDiv.innerText = duration + ' s';
+        }
     }
 
     // 等待函數 (支援自動/單步)
@@ -298,6 +393,11 @@
         if (isSorting) return;
         isSorting = true;
         
+        // 重置統計變量
+        comparisons = 0;
+        swaps = 0;
+        startTime = performance.now();
+        
         const n = data.length;
         const bars = document.getElementsByClassName('bar');
 
@@ -311,8 +411,11 @@
 
             // 尋找最小值
             for (let j = i + 1; j < n; j++) {
+                comparisons++;
+                
                 bars[j].style.backgroundColor = '#f1c40f';
                 updateUI(1, `比較 index ${j}(${data[j]}) 與最小值 index ${minIndex}(${data[minIndex]})`, "log-compare");
+                updateStatsDisplay();
                 await wait();
 
                 if (data[j] < data[minIndex]) {
@@ -330,6 +433,7 @@
 
             // 交換（如果需要）
             if (minIndex !== i) {
+                swaps++;
                 updateUI(0, `交換 ${data[i]} ↔ ${data[minIndex]}`, "log-swap");
                 [data[i], data[minIndex]] = [data[minIndex], data[i]];
                 
@@ -337,6 +441,7 @@
                 bars[i].innerText = data[i];
                 bars[minIndex].style.height = `${(data[minIndex] / Math.max(...data)) * 100}%`;
                 bars[minIndex].innerText = data[minIndex];
+                updateStatsDisplay();
                 await wait();
             }
 
@@ -347,6 +452,9 @@
 
         // 最後一個元素
         bars[n - 1].style.backgroundColor = 'var(--secondary)';
+        
+        endTime = performance.now();
+        updateStatsDisplay();
         
         isSorting = false;
         mode = 'idle';
