@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基數排序法 - 進階互動教學</title>
+    <style>
+        :root {
+            --primary: #f39c12;
+            --secondary: #2ecc71;
+            --accent: #e74c3c;
+            --bg: #f4f7f6;
+            --dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 { color: var(--primary); margin: 0; }
+
+        .title-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title-header h1 {
+            flex: 1;
+        }
+
+        .back-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #95a5a6;
+            color: #fff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .back-link:hover {
+            background: #7f8c8d;
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        input[type="text"] {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--secondary); color: white; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-step { background: #9b59b6; color: white; }
+        
+        button:hover:not(:disabled) { opacity: 0.8; transform: translateY(-1px); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* 視覺化區塊 */
+        .visualizer-box {
+            height: 300px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 8px;
+            margin: 30px 0;
+            border-bottom: 3px solid var(--dark);
+            padding-bottom: 5px;
+        }
+
+        .bar {
+            width: 40px;
+            background: var(--primary);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 5px 5px 0 0;
+            transition: height 0.3s, background-color 0.3s;
+            padding-bottom: 5px;
+        }
+
+        /* 步驟紀錄 */
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        #log-container {
+            height: 150px;
+            overflow-y: auto;
+            background: #2d3436;
+            color: #bdc3c7;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+        }
+
+        .log-swap { color: #ff7675; }
+        .log-compare { color: #f1c40f; }
+        .log-done { color: #55efc4; }
+
+        input[type="range"] { width: 100%; cursor: pointer; }
+
+        /* 統計信息面板 */
+        .stats-panel {
+            background: #f0f8f7;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .info-box {
+            background: #e8f4f0;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--dark);
+        }
+
+        .info-box strong {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="title-header">
+        <h1>基數排序法 (Radix Sort) 互動平台</h1>
+        <a href="index.html" class="back-link">← 返回首頁</a>
+    </div>
+
+    <div class="control-panel">
+        <div class="input-group">
+            <label><strong>自定義數字 (逗號隔開):</strong></label>
+            <input type="text" id="userInput" placeholder="例如: 170, 45, 75, 90, 2, 27, 9">
+            <div class="button-group">
+                <button class="btn-primary" onclick="initArrayFromInput()">套用並重置</button>
+                <button style="background: #95a5a6; color:white;" onclick="generateRandom()">隨機產生</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label><strong>動畫速度 (越左越快):</strong></label>
+            <input type="range" id="speedRange" min="50" max="1500" value="500" style="direction: rtl;">
+            <div class="button-group">
+                <button id="autoBtn" class="btn-success" onclick="startAuto()">自動執行</button>
+                <button id="stepBtn" class="btn-step" onclick="triggerNextStep()">單步執行</button>
+                <button class="btn-accent" onclick="window.location.reload()">重新整理</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-info">
+        <span id="current-action">狀態：等待開始</span>
+        <span id="step-count">步數：0</span>
+    </div>
+    <div class="visualizer-box" id="chart"></div>
+
+    <div id="log-container">
+        <div>系統就緒，請輸入數字或點擊自動執行。</div>
+    </div>
+
+    <div class="stats-panel">
+        <div class="stat-item">
+            <div class="stat-label">當前位數</div>
+            <div class="stat-value" id="digit-stat">-</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">處理中</div>
+            <div class="stat-value" id="pass-stat">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">移動次數</div>
+            <div class="stat-value" id="moves-stat">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">執行時間</div>
+            <div class="stat-value" id="time-stat">0 s</div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <strong>💡 基數排序法 (Radix Sort) 說明：</strong><br>
+        基數排序是一種非比較型排序演算法，按數字的位數（個位、十位、百位...）從個位開始逐位排序。時間複雜度為 O(nk)，其中 k 為最大數字的位數。特別適合整數排序。
+    </div>
+</div>
+
+<script>
+    let data = [];
+    let originalData = [];
+    let isSorting = false;
+    let stepResolver = null;
+    let mode = 'idle';
+    let totalSteps = 0;
+
+    // 統計變量
+    let passCount = 0;
+    let moves = 0;
+    let startTime = 0;
+    let endTime = 0;
+
+    const chart = document.getElementById('chart');
+    const logBox = document.getElementById('log-container');
+    const actionText = document.getElementById('current-action');
+    const stepText = document.getElementById('step-count');
+    const digitStatDiv = document.getElementById('digit-stat');
+    const passStatDiv = document.getElementById('pass-stat');
+    const movesStatDiv = document.getElementById('moves-stat');
+    const timeStatDiv = document.getElementById('time-stat');
+
+    // 隨機產生
+    function generateRandom() {
+        const randomData = Array.from({length: 10}, () => Math.floor(Math.random() * 900) + 10);
+        document.getElementById('userInput').value = randomData.join(', ');
+        initArrayFromInput();
+    }
+
+    // 初始化：讀取輸入
+    function initArrayFromInput() {
+        const input = document.getElementById('userInput').value;
+        data = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0);
+        
+        if (data.length === 0) {
+            alert("請輸入有效的非負整數！");
+            return;
+        }
+        
+        originalData = [...data];
+        renderBars();
+        logBox.innerHTML = '<div>陣列已重置。</div>';
+        totalSteps = 0;
+        
+        // 重置統計變量
+        passCount = 0;
+        moves = 0;
+        digitStatDiv.innerText = '-';
+        updateStatsDisplay();
+        
+        updateUI(0, "準備就緒");
+        isSorting = false;
+        mode = 'idle';
+    }
+
+    // 渲染長條圖
+    function renderBars() {
+        chart.innerHTML = '';
+        const maxVal = Math.max(...data, 1);
+        data.forEach((val, i) => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            bar.id = `bar-${i}`;
+            bar.style.height = `${(val / maxVal) * 100}%`;
+            bar.innerText = val;
+            chart.appendChild(bar);
+        });
+    }
+
+    // 更新狀態文字與紀錄
+    function updateUI(stepInc, msg, className = "") {
+        totalSteps += stepInc;
+        stepText.innerText = `步數：${totalSteps}`;
+        actionText.innerText = `狀態：${msg}`;
+        const entry = document.createElement('div');
+        if(className) entry.className = className;
+        entry.innerText = `> ${msg}`;
+        logBox.prepend(entry);
+    }
+
+    // 更新統計信息顯示
+    function updateStatsDisplay() {
+        passStatDiv.innerText = passCount;
+        movesStatDiv.innerText = moves;
+        
+        if (startTime > 0 && endTime > 0) {
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            timeStatDiv.innerText = duration + ' s';
+        }
+    }
+
+    // 等待函數
+    function wait() {
+        if (mode === 'step') {
+            return new Promise(resolve => {
+                stepResolver = resolve;
+            });
+        } else {
+            const ms = document.getElementById('speedRange').value;
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    }
+
+    // 觸發下一步
+    function triggerNextStep() {
+        if (!isSorting) {
+            mode = 'step';
+            radixSort();
+            return;
+        }
+        if (stepResolver) {
+            const resolve = stepResolver;
+            stepResolver = null;
+            resolve();
+        }
+    }
+
+    // 開始自動執行
+    function startAuto() {
+        if (isSorting && mode === 'step') {
+            mode = 'auto';
+            if (stepResolver) triggerNextStep();
+            return;
+        }
+        mode = 'auto';
+        radixSort();
+    }
+
+    // 獲取數字在指定位數的值
+    function getDigit(num, digitPos) {
+        return Math.floor(Math.abs(num) / Math.pow(10, digitPos)) % 10;
+    }
+
+    // 獲取數字的最大位數
+    function getMaxDigits(arr) {
+        let maxNum = Math.max(...arr);
+        let digits = 0;
+        while (maxNum > 0) {
+            digits++;
+            maxNum = Math.floor(maxNum / 10);
+        }
+        return digits || 1;
+    }
+
+    // 基數排序核心邏輯
+    async function radixSort() {
+        if (isSorting) return;
+        isSorting = true;
+
+        // 重置統計變量
+        passCount = 0;
+        moves = 0;
+        startTime = performance.now();
+
+        const maxDigits = getMaxDigits(data);
+        updateUI(1, `最大位數：${maxDigits}，開始基數排序`, "log-done");
+        await wait();
+
+        const bars = document.getElementsByClassName('bar');
+        const maxVal = Math.max(...data, 1);
+
+        for (let digit = 0; digit < maxDigits; digit++) {
+            passCount++;
+            digitStatDiv.innerText = digit + 1;
+            updateUI(1, `=== 第 ${digit + 1} 位（${['個位', '十位', '百位', '千位'][digit] || '位'}）排序開始 ===`, "log-compare");
+            await wait();
+
+            // 建立 0-9 的桶
+            const buckets = Array.from({length: 10}, () => []);
+            
+            // 將元素放入對應的桶
+            for (let i = 0; i < data.length; i++) {
+                const digitVal = getDigit(data[i], digit);
+                buckets[digitVal].push(data[i]);
+                
+                bars[i].style.backgroundColor = '#95a5a6';
+                updateUI(0, `數字 ${data[i]} 的第 ${digit + 1} 位是 ${digitVal}，放入桶 ${digitVal}`, "log-swap");
+                updateStatsDisplay();
+                await wait();
+            }
+
+            // 將桶中的元素依序取出，重新排列
+            let index = 0;
+            for (let bucketNum = 0; bucketNum < 10; bucketNum++) {
+                for (let item of buckets[bucketNum]) {
+                    data[index] = item;
+                    moves++;
+                    
+                    // 更新視覺化
+                    bars[index].style.height = `${(data[index] / maxVal) * 100}%`;
+                    bars[index].innerText = data[index];
+                    bars[index].style.backgroundColor = '#f39c12';
+                    
+                    updateUI(0, `位置 ${index} ← ${item}（來自桶 ${bucketNum}）`, "log-done");
+                    updateStatsDisplay();
+                    await wait();
+                    index++;
+                }
+            }
+            
+            updateUI(0, `第 ${digit + 1} 位排序完成，陣列狀態：[${data.join(', ')}]`, "log-done");
+            await wait();
+        }
+
+        // 全部完成，標示所有為綠色
+        for (let bar of bars) {
+            bar.style.backgroundColor = 'var(--secondary)';
+        }
+
+        endTime = performance.now();
+        updateStatsDisplay();
+
+        isSorting = false;
+        mode = 'idle';
+        updateUI(0, "基數排序完整結束！", "log-done");
+    }
+
+    // 網頁載入時初始化
+    window.onload = generateRandom;
+</script>
+
+</body>
+</html>
