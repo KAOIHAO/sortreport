@@ -48,7 +48,7 @@
 
         .card-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -64,6 +64,11 @@
             font-size: 1.1em;
             transition: 0.3s;
             cursor: pointer;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .card-bubble {
@@ -83,6 +88,11 @@
         .card-radix {
             background: linear-gradient(135deg, #f39c12 0%, #d68910 100%);
         }
+
+        .card-benchmark {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
         .card:hover {
             transform: translateY(-10px);
             box-shadow: 0 15px 40px rgba(0,0,0,0.2);
@@ -149,6 +159,14 @@
         <a href="radix_sort.html" class="card card-radix">
             <div class="card-icon">🔢</div>
             <div>基數排序法<br><small style="font-size: 0.8em;">Radix Sort</small></div>
+        </a>
+    </div>
+
+    <!-- 效能測試區域 -->
+    <div style="margin-bottom: 20px;">
+        <a href="performance_benchmark.html" class="card card-benchmark">
+            <div class="card-icon">⏱️</div>
+            <div>效能測試實驗<br><small style="font-size: 0.8em;">Performance Benchmark</small></div>
         </a>
     </div>
 
